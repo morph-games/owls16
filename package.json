@@ -1,0 +1,29 @@
+{
+  "devDependencies": {
+    "vite": "^5.2.11"
+  },
+  "name": "owls16",
+  "description": "Open Web LS16 Fantasy Console",
+  "version": "0.1.0",
+  "main": "index.js",
+  "dependencies": {
+    "esbuild": "^0.20.2",
+    "nanoid": "^3.3.7",
+    "picocolors": "^1.0.0",
+    "postcss": "^8.4.38",
+    "rollup": "^4.17.2",
+    "source-map-js": "^1.2.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "vite dev"
+  },
+  "keywords": [
+    "LowSpec",
+    "Fantasy",
+    "Console",
+    "retro"
+  ],
+  "author": "Luke Nickerson",
+  "license": "MIT"
+}

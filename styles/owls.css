@@ -1,0 +1,243 @@
+/* Fonts converted with https://cloudconvert.com/ttf-to-woff */
+@font-face {
+	font-family: 'LS04b03'; /* Renamed because browser wouldn't always load it starting with "0" */
+	src: url('./fonts/LS04b03.woff') format('woff'),  
+		url('./fonts/04B_03__.TTF') format('truetype');
+}
+@font-face {
+	font-family: 'BMSpace';
+	src: url('./fonts/BMSpace.woff') format('woff'),
+		url('./fonts/BMSPA___.TTF') format('truetype');
+}
+@font-face {
+	font-family: 'BMJapan';
+	src: url('./fonts/BMJapan.woff') format('woff'), 
+		url('./fonts/BMjapan.TTF') format('truetype');
+}
+
+body {
+	background: #474444;
+	padding: 0;
+	margin: 0;
+	font-family: "Trebuchet MS", Helvetica, sans-serif;
+}
+div {
+	box-sizing: border-box;
+}
+main {
+	height: 100vh;
+	width: 100vw;
+	display: flex;
+	justify-content: space-evenly;
+	--console-beige: #d8d0cc;
+	--console-gray: #999;
+	--console-accent: #a60;
+	--console-black: #111;
+	--console-black-active: #333;
+}
+main.view-console .library {
+	width: 0;
+	opacity: 0;
+}
+main.view-console .console {
+	flex-grow: 1;
+}
+
+.console {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+	align-items: center;
+	align-content: center;
+}
+
+.console-monitor {
+	background: var(--console-beige);
+	text-align: center;
+	box-sizing: border-box;
+	padding: 2vmin;
+	border-radius: 1vmin;
+	box-shadow: 0 .8vmin 1vmin rgba(0, 0, 0, .5),
+		inset 0 .5vmin .5vmin rgba(255, 255, 255, .3),
+		inset 0 -.5vmin .5vmin rgba(0, 0, 0, .3);
+}
+.console-monitor-mat {
+	background: var(--console-gray);
+	padding: 2vmin;
+	border-radius: 1vmin;
+	border: solid 2px rgba(0, 0, 0, 0.1);
+}
+.console-monitor-canvas {
+	
+	/* --screen-size-base: 32px; */
+	--screen-size-base: 64px;
+	--screen-size-base: clamp(32px, 10vmin, 64px);
+	width: calc(var(--screen-size-base) * 8);
+	height: calc(var(--screen-size-base) * 7);
+	border: solid 4px #333;
+	background: #000;
+	image-rendering: pixelated;
+	/* image-rendering: crisp-edges; */
+}
+.console-monitor--on .console-monitor-canvas {
+	box-shadow: 0 0 2vmin rgba(255, 255, 240, 1);
+}
+
+.console-system {
+	background: var(--console-beige);
+	--console-system-size: 6vmin;
+	--console-system-curve: calc(var(--console-system-size) / 6);
+	width: calc(var(--console-system-size) * 5);
+	height: calc(var(--console-system-size) * 1);
+	border-radius: var(--console-system-curve);
+	box-shadow: 0 .8vmin 1vmin rgba(0, 0, 0, .5);
+	text-align: center;
+}
+
+.console-controller {
+	--controller-size-unit: clamp(14vmin, 20vw, 10vmax);
+	--controller-padding: calc(var(--controller-size-unit) / 10);
+	--controller-curve: calc(var(--controller-size-unit) / 8);
+	background: var(--console-gray);
+	height: calc(var(--controller-size-unit) * 2);
+	width: calc(var(--controller-size-unit) * 5);
+	display: flex;
+	flex-direction: row;
+	border-radius: var(--controller-curve);
+	box-shadow: 0 .8vmin 1vmin rgba(0, 0, 0, .5),
+		inset 0 calc(var(--controller-size-unit) / 50) calc(var(--controller-size-unit) / 50) rgba(255, 255, 255, .3),
+		inset 0 calc(var(--controller-size-unit) / -50) calc(var(--controller-size-unit) / 50) rgba(0, 0, 0, .3);
+}
+.cc-button {
+	background: var(--console-black);
+	border: solid 1px rgba(100, 100, 100, .1);
+	border-radius: calc(var(--controller-curve) / 1.2);
+	cursor: pointer;
+	height: calc(var(--controller-size-unit) / 3.5);
+	width: calc(var(--controller-size-unit) / 3.5);
+	color: transparent;
+	overflow: hidden;
+	box-shadow: 0 calc(var(--controller-size-unit) / 30) calc(var(--controller-size-unit) / 40) rgba(0, 0, 0, 0.5),
+		inset 0 calc(var(--controller-size-unit) / 50) calc(var(--controller-size-unit) / 50) rgba(255, 255, 255, .5),
+		inset 0 calc(var(--controller-size-unit) / -50) calc(var(--controller-size-unit) / 50) rgba(0, 0, 0, .5);
+	/* padding: calc(var(--controller-size-unit) / 20); */
+	transition: all .1s ease-in-out;
+	transform: scale(1.01);
+}
+.cc-button:active,
+.cc-button--active {
+	transform: scale(1);
+	box-shadow: 0 0 calc(var(--controller-size-unit) / 50) rgba(0, 0, 0, 0.5);
+	background-color: var(--console-black-active);
+}
+.cc-dpad {
+	background: var(--console-beige);
+	width: calc(var(--controller-size-unit) * 1.8);
+	border-radius: var(--controller-curve);
+	padding: var(--controller-padding);
+	margin: var(--controller-padding);
+	margin-right: 0;
+	position: relative;
+	--cc-dpad-button-size: calc(var(--controller-size-unit) *  .45);
+	--cc-dpad-half: calc(50% - (var(--cc-dpad-button-size) * .5));
+	--cc-dpad-over: calc(50% - (var(--cc-dpad-button-size) * 1.5));
+	--cc-dpad-curve: calc(var(--controller-curve) * 1.4);
+	box-shadow: inset 0 .2vmin .5vmin rgba(0, 0, 0, 0.6);
+}
+.cc-dpad-center {
+	position: absolute;
+	display: block;
+	width: var(--cc-dpad-button-size);
+	height: var(--cc-dpad-button-size);
+	top: var(--cc-dpad-half);
+	left: var(--cc-dpad-half);
+	background: var(--console-black);
+}
+.cc-dpad-button {
+	position: absolute;
+	width: var(--cc-dpad-button-size);
+	height: var(--cc-dpad-button-size);
+	color: rgba(255, 255, 255, .05);
+	box-shadow: 0 calc(var(--controller-size-unit) / 30) calc(var(--controller-size-unit) / 40) rgba(0, 0, 0, 0.5);
+}
+.cc-dpad-up {
+	top: var(--cc-dpad-over);
+	left: var(--cc-dpad-half);
+	border-radius: var(--cc-dpad-curve) var(--cc-dpad-curve) 0 0;
+}
+.cc-dpad-down {
+	bottom: var(--cc-dpad-over);
+	left: var(--cc-dpad-half);
+	border-radius: 0 0 var(--cc-dpad-curve) var(--cc-dpad-curve);
+}
+.cc-dpad-left {
+	top: var(--cc-dpad-half);
+	left: var(--cc-dpad-over);
+	border-radius: var(--cc-dpad-curve) 0 0 var(--cc-dpad-curve);
+}
+.cc-dpad-right {
+	top: var(--cc-dpad-half);
+	right: var(--cc-dpad-over);
+	border-radius: 0 var(--cc-dpad-curve) var(--cc-dpad-curve) 0;
+}
+
+.cc-right-side {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-around;
+	align-items: stretch;
+	align-content: stretch;
+	padding: var(--controller-padding);
+}
+.cc-logo {
+	height: calc(var(--controller-size-unit) / 1.2);
+	padding: var(--controller-padding);
+	font-family: 'BMJapan';
+	font-size: calc(var(--controller-size-unit) / 1.5);
+	text-align: center;
+	color: var(--console-accent);
+	flex-grow: 1;
+	text-shadow: 0 calc(var(--controller-size-unit) / 60) calc(var(--controller-size-unit) / 50) rgba(0, 0, 0, 0.3);
+}
+.cc-controls {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: row;
+	border-radius: var(--controller-curve);
+	background: var(--console-beige);
+	gap: var(--controller-padding);
+	box-shadow: inset 0 .2vmin .5vmin rgba(0, 0, 0, 0.6);
+}
+.cc-center-controls,
+.cc-action-controls {
+	display: flex;
+	flex-direction: row;
+	flex-grow: 1;
+	padding: var(--controller-padding);
+	gap: var(--controller-padding);
+}
+.cc-center-button {
+	width: calc(var(--controller-size-unit) / 1.5);
+}
+.cc-button-container {
+	display: flex;
+	flex-direction: column;
+	text-align: center;
+	justify-content: space-evenly;
+}
+.cc-button-label {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	text-transform: uppercase;
+	font-size: calc(var(--controller-size-unit) / 7);
+	opacity: 0.8;
+}
+.cc-action-controls .cc-button-label {
+	color: var(--console-accent);
+}
+.cc-action-button {
+	height: calc(var(--controller-size-unit) / 2);
+	width: calc(var(--controller-size-unit) / 2);
+	border-radius: var(--controller-size-unit);
+}

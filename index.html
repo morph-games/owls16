@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>OWLS16 Fantasy Console</title>
+	<meta charset="utf-8">
+	<meta name="description" content="Open Web LS16 Fantasy Console">
+	<meta name="author" content="Morph Games">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<link rel="preload" href="./styles/fonts/LS04b03.woff" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="./styles/fonts/BMSpace.woff" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="./styles/fonts/BMJapan.woff" as="font" type="font/woff2" crossorigin>
+	<link href="./styles/owls.css" rel="stylesheet" />
+	<script type="module" src="./src/console.js"></script>
+</head>
+<body scroll="no">
+	<main class="view-console">
+		<article class="console">
+			<div class="console-monitor console-monitor--on">
+				<div class="console-monitor-mat">
+					<canvas class="console-monitor-canvas" width="256" height="224"></canvas>
+				</div>
+			</div>
+			<div class="console-system">
+				&nbsp;
+			</div>
+			<div class="console-controller">
+				<div class="cc-dpad">
+					<button type="button" title="Up" class="cc-button cc-dpad-button cc-dpad-up"
+						data-buttonname="up">
+						▲</button>
+					<button type="button" title="Left" class="cc-button cc-dpad-button cc-dpad-left"
+						data-buttonname="left">
+						◀</button>
+					<button type="button" title="Right" class="cc-button cc-dpad-button cc-dpad-right"
+						data-buttonname="right">
+						▶</button>
+					<button type="button" title="Down" class="cc-button cc-dpad-button cc-dpad-down"
+						data-buttonname="down">
+						▼</button>
+					<div class="cc-dpad-center"></div>
+				</div>
+				<div class="cc-right-side">
+					<div class="cc-logo">LS16</div>
+					<div class="cc-controls">
+						<div class="cc-center-controls">
+							<div class="cc-button-container">
+								<button type="button" title="Select" class="cc-button cc-center-button cc-select-button"
+									data-buttonname="select">
+									Select
+								</button>
+								<div class="cc-button-label cc-select-button-label">Select</div>
+							</div>
+							<div class="cc-button-container">
+								<button type="button" title="Start" class="cc-button cc-center-button cc-start-button"
+									data-buttonname="start">
+									Start
+								</button>
+								<div class="cc-button-label cc-start-button-label">Start</div>
+							</div>
+						</div>
+						<div class="cc-action-controls">
+							<div class="cc-button-container">
+								<button type="button" title="Button A" class="cc-button cc-action-button cc-a-button"
+									data-buttonname="a">
+									A
+								</button>
+								<div class="cc-button-label">A</div>
+							</div>
+							<div class="cc-button-container">
+								<button type="button" title="Button B" class="cc-button cc-action-button cc-b-button"
+									data-buttonname="b">
+									B
+								</button>
+								<div class="cc-button-label">B</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</article>
+		<article class="library">
+
+		</article>
+	</main>
+</body>
+</html>
