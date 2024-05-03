@@ -2,6 +2,7 @@
 
 Made for https://itch.io/jam/lospec-jam-2 and maybe also https://itch.io/jam/the-tool-jam-4
 
+Try it out: https://morph-games.github.io/owls16
 
 ## Fantasy Console Limitations
 
