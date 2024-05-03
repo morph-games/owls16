@@ -1,6 +1,6 @@
 import { loopAsync, randInt, pick, wait } from './utils.js';
 import { loadFonts, fontsArray, fontsSizeArray } from './fonts.js';
-import { colorArray, rgbToHexColor, correctColors } from './colors';
+import { colorArray, rgbToHexColor, correctColors } from './colors.js';
 
 const SCREEN_WIDTH = 256;
 const SCREEN_HEIGHT = 224;
