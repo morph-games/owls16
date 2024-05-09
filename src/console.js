@@ -19,6 +19,34 @@ const BUTTON_NAME = [
 	'start',
 	'select',
 ];
+const DEFAULT_KEYMAP = {
+	'w': BUTTON_UP,
+	'a': BUTTON_LEFT,
+	's': BUTTON_DOWN,
+	'd': BUTTON_RIGHT,
+	'e': BUTTON_A,
+	'q': BUTTON_B,
+	' ': BUTTON_START,
+	'Tab': BUTTON_SELECT,
+	'z': BUTTON_B,
+	'x': BUTTON_A,
+	'f': BUTTON_SELECT,
+	'r': BUTTON_START,
+	'ArrowUp': BUTTON_UP,
+	'ArrowLeft': BUTTON_LEFT,
+	'ArrowDown': BUTTON_DOWN,
+	'ArrowRight': BUTTON_RIGHT,
+	'[': BUTTON_SELECT,
+	']': BUTTON_START,
+	'h': BUTTON_SELECT,
+	'j': BUTTON_START,
+	'\'': BUTTON_A,
+	';': BUTTON_B,
+	'm': BUTTON_A,
+	'n': BUTTON_B,
+	'v': BUTTON_A,
+	'c': BUTTON_B,
+};
 const NOT_DOWN = 0;
 const DOWN_FIRST = 1;
 const DOWN_REPEAT = 2;
@@ -41,6 +69,12 @@ function getColor(colorParam) {
 	return colorArray[colorIndex] || colorArray[0];
 }
 
+function getScopedFn(scope, script) {
+	if (typeof script === 'function') return script.bind(scope);
+	if (typeof script !== 'string') throw new Error('Invalid script');
+	Function(`"use strict"; ${script}`).bind(scope);
+}
+
 function loadImageSrc(src) {
 	return new Promise((resolve) => {
 		const img = new Image();
@@ -50,7 +84,6 @@ function loadImageSrc(src) {
 }
 
 async function splitSheetIntoSprites(sheetImg) {
-	const sprites = [];
 	// TODO: allow different sized spritesheets
 	const sheetSize = { x: SCREEN_WIDTH, y: SCREEN_HEIGHT };
 	const spriteSize = { x: 16, y: 16 };
@@ -88,11 +121,6 @@ function anyBtn() {
 		if (core.buttonDown[buttonDownKeys[i]]) return true;
 	}
 	return false;
-	// const count = Object.keys(core.buttonDown).reduce(
-	// 	(sum, key) => sum + (core.buttonDown[key] ? 1 : 0),
-	// 	0,
-	// );
-	// return (count > 0);
 }
 
 function btn(button = undefined) {
@@ -161,57 +189,18 @@ const API = {
 	randInt,
 };
 
-
-const testCart = {
-	sheets: [
-		['0000000000000000000000000000000000000000000000000000000']
-	],
-	program: {
-		init: "function z() { }; const y = () => {}; return { z };",
-		draw: "cls(); rect(0, 0, 50, 50);",
-		update: "",
-	},
-};
-
 const core = {
 	ctx: null, // main canvas / screen context
 	keyDown: {},
 	buttonDown: {},
 	domButtons: {},
-	keyMap: {
-		'w': BUTTON_UP,
-		'a': BUTTON_LEFT,
-		's': BUTTON_DOWN,
-		'd': BUTTON_RIGHT,
-		'e': BUTTON_A,
-		'q': BUTTON_B,
-		' ': BUTTON_START,
-		'Tab': BUTTON_SELECT,
-		'z': BUTTON_B,
-		'x': BUTTON_A,
-		'f': BUTTON_SELECT,
-		'r': BUTTON_START,
-		'ArrowUp': BUTTON_UP,
-		'ArrowLeft': BUTTON_LEFT,
-		'ArrowDown': BUTTON_DOWN,
-		'ArrowRight': BUTTON_RIGHT,
-		'[': BUTTON_SELECT,
-		']': BUTTON_START,
-		'h': BUTTON_SELECT,
-		'j': BUTTON_START,
-		'\'': BUTTON_A,
-		';': BUTTON_B,
-		'm': BUTTON_A,
-		'n': BUTTON_B,
-		'v': BUTTON_A,
-		'c': BUTTON_B,
-	},
+	keyMap: { ...DEFAULT_KEYMAP },
 	mouseDownButton: null,
 	drawId: null,
 	updateId: null,
 	loadedCart: null,
 	runningProgram: null,
-	updateTime: 1000 / 60,
+	updateTime: 1000 / 60, // Every 16.67 ms = 60 updates per second
 	defaultLaunchCartName: null,
 	installedCarts: {},
 	installCart(cart, options = {}) {
@@ -272,104 +261,40 @@ const core = {
 		const api = { ...API };
 		if (options.includeLaunch) api.launch = (name) => this.loadProgramByName(name || this.defaultLaunchCartName);
 
-		// function runCode(txt) {
-		// 	if (!txt) return;
-		// 	if (typeof txt === 'function') return txt(api);
-		// 	// TODO: clean the string
-		// 	return eval(txt);
-		// }
 		const { ctx } = this;
 		const nextUpdateCore = () => this.nextUpdate();
 		const nextDrawCore = () => this.nextDraw();
-		
 
-		function getScopedFn(scope, script) {
-			if (typeof script === 'function') return script.bind(scope);
-			if (typeof script !== 'string') throw new Error('Invalid script');
-			Function(`"use strict"; const $ = this; ${script}`).bind(scope);
-		}
+		const scriptHeader = 'const $ = this; console.log(api);';
 		const scope = (options.scope) ? { ...options.scope } : {};
 		const p = this.runningProgram = {
 			scope,
 			sprites: [],
-			_init: getScopedFn(scope, cart.program.init),
-			_draw: getScopedFn(scope, cart.program.draw),
-			_update: getScopedFn(scope, cart.program.update),
+			_init: getScopedFn(scope, scriptHeader + cart.program.init),
+			_draw: getScopedFn(scope, scriptHeader + cart.program.draw),
+			_update: getScopedFn(scope, scriptHeader + cart.program.update),
 			init() {
 				const returnedObj = this._init(api, this.scope);
 				if (returnedObj) {
 					Object.keys(returnedObj).forEach((key) => this.scope[key] = returnedObj[key]);
 				}
 				console.log('Init returned', returnedObj);
-				// runCode(cart.program.init);
 				correctColors(ctx, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 			},
 			draw() {
 				this._draw(api, this.scope);
 				correctColors(ctx, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-				// runCode(cart.program.draw);
 				nextDrawCore();
 			},
 			update() {
 				this._update(api, this.scope);
+				// We could do a correctColors here in case the program draws in the update fn
+				// but this is not recommended, and will be quickly overwritten by the draw method
 				nextUpdateCore();
 			},
 		};
-		
 		await this.loadProgramSprites(p, cart);
 		p.init();
-
-
-		// p.sprites = 
-		// p.init = function programInit() {
-		// 	const returnedObj = p._init(api, scope);
-		// 	Object.keys(returnedObj).forEach((key) => scope[key] = returnedObj[key]);
-		// 	console.log('Init returned', returnedObj);
-		// 	// runCode(cart.program.init);
-		// 	correctColors(ctx, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-		// };
-		// p.draw = function programDraw() {
-		// 	p._draw(api, scope);
-		// 	// runCode(cart.program.draw);
-		// 	nextDraw();
-		// };
-		// p.update = function programUpdate() {
-		// 	// runCode(cart.program.update);
-		// 	p._update(api, scope);
-		// 	nextUpdate();
-		// };
-
-		
-		/*
-		const getFnText = (script) => `"use strict"; const { g } = this; ${script}`;
-		const scopedEvalFn = (scope, script) => Function(getFnText(script)).bind(scope);
-		const scope = { a: 0, g: {} }; // TODO
-		const initFn = scopedEvalFn(scope, cart.program.init)
-		*/
-		this.start();
-	},
-	testProgram(cart) {
-		this.loadedCart = cart;
-		// this.runCode(this.loadedCart.program.init);
-		// eval(this.loadedCart.program.init);
-		const indirectEval = (js) => {
-			const iEval = eval;
-			// iEval(`"use strict";${js}`);
-			iEval(js);
-		};
-		const fn = Function('test', '"use strict";var x = 1; return { x };');
-		let z = fn();
-		console.log(typeof x, z);
-		const scopedEval = (scope, script) => Function(`"use strict"; const { g } = this; ${script}`).bind(scope)();
-		const scope = { a: 0, g: {} };
-		const s2 = scopedEval(scope, `console.log('g', g); this.a += 1; return this;`)
-		console.log(scope, s2);
-
-		indirectEval('x = 1;');
-		console.log(typeof x);
-		// indirectEval(this.loadedCart.program.draw);
-
-
 		this.start();
 	},
 	setupButtons() {
@@ -380,10 +305,12 @@ const core = {
 			if (i === -1) return;
 			if (!this.domButtons[i]) this.domButtons[i] = [];
 			this.domButtons[i].push(elt);
-			elt.onmousedown = (e) => {
+			const handleHit = (e) => {
 				this.pushButton(i, DOWN_FIRST);
 				this.mouseDownButton = i;
 			};
+			elt.ontouchstart = handleHit;
+			elt.onmousedown = handleHit;
 		});
 	},
 	pushButton(button, down = DOWN_FIRST) {
@@ -467,7 +394,7 @@ const core = {
 		this.stopUpdate();
 		this.stopDraw();
 	},
-}
+};
 
 function test(ctx) {
 	loopAsync(1000, async (i) => {
@@ -479,22 +406,6 @@ function test(ctx) {
 		ctx.fillRect(x, y, size, size);
 		// await wait(1);
 	});
-}
-
-function checkPixels() {
-	const imageData = core.ctx.getImageData(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	const { data } = imageData;
-	let c = 0;
-	let ok = 0;
-	let notOk = [];
-	for (let i = 0; i < data.length; i += 4) {
-		const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
-		const color = rgbToHexColor(r, g, b);
-		c++;
-		if (colorArray.includes(color)) ok++;
-		else notOk.push(color);
-	}
-	console.log('Color check:', ok, '/', c); //  notOk);
 }
 
 /** The exposed functionality for the console */

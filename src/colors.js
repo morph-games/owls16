@@ -76,5 +76,21 @@ function correctColors(ctx, x, y, w, h) {
 	// console.log('Corrected', fixed, 'pixels');
 }
 
-export { colorArray, rgbColorArray, rgbToHexColor, correctColors };
+function checkPixelColors(ctx) {
+	const imageData = ctx.getImageData(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	const { data } = imageData;
+	let c = 0;
+	let ok = 0;
+	let notOk = [];
+	for (let i = 0; i < data.length; i += 4) {
+		const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+		const color = rgbToHexColor(r, g, b);
+		c++;
+		if (colorArray.includes(color)) ok++;
+		else notOk.push(color);
+	}
+	console.log('Color check:', ok, '/', c); //  notOk);
+}
+
+export { colorArray, rgbColorArray, rgbToHexColor, correctColors, checkPixelColors };
 
