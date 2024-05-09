@@ -69,10 +69,10 @@ function getColor(colorParam) {
 	return colorArray[colorIndex] || colorArray[0];
 }
 
-function getScopedFn(scope, script) {
+function getScopedFn(scope, script, scriptHeader = '') {
 	if (typeof script === 'function') return script.bind(scope);
 	if (typeof script !== 'string') throw new Error('Invalid script');
-	Function(`"use strict"; ${script}`).bind(scope);
+	Function(`"use strict"; ${scriptHeader} ${script}`).bind(scope);
 }
 
 function loadImageSrc(src) {
@@ -270,9 +270,9 @@ const core = {
 		const p = this.runningProgram = {
 			scope,
 			sprites: [],
-			_init: getScopedFn(scope, scriptHeader + cart.program.init),
-			_draw: getScopedFn(scope, scriptHeader + cart.program.draw),
-			_update: getScopedFn(scope, scriptHeader + cart.program.update),
+			_init: getScopedFn(scope, cart.program.init, scriptHeader),
+			_draw: getScopedFn(scope, cart.program.draw, scriptHeader),
+			_update: getScopedFn(scope, cart.program.update, scriptHeader),
 			init() {
 				const returnedObj = this._init(api, this.scope);
 				if (returnedObj) {
