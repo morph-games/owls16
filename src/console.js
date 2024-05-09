@@ -1,6 +1,8 @@
-import { loopAsync, randInt, pick, wait } from './utils.js';
+import { loopAsync, randInt, pick, clamp, rand, lerp, wait } from './utils.js';
 import { loadFonts, fontsArray, fontsSizeArray } from './fonts.js';
 import { colorArray, rgbToHexColor, correctColors } from './colors.js';
+import splash from './splash.js';
+import launcher from './launcher.js';
 
 const SCREEN_WIDTH = 256;
 const SCREEN_HEIGHT = 224;
@@ -20,14 +22,81 @@ const BUTTON_NAME = [
 const NOT_DOWN = 0;
 const DOWN_FIRST = 1;
 const DOWN_REPEAT = 2;
+const COLORS = colorArray;
+const NOOP = () => {};
 const NIL = null, nil = null; // For pico-8 compatibility
 const pxOffset = 0;
+
+const { round, sin, cos, min, max } = Math;
+
+function getColor(colorParam) {
+	let colorIndex = 0;
+	if (colorParam) {
+		if (typeof colorParam === 'number') colorIndex = colorParam;
+		else if (typeof colorParam === 'string') {
+			if (colorParam.substring(0, 1) === '#') return colorParam;
+			colorIndex = parseInt(colorParam, 16);
+		}
+	}
+	return colorArray[colorIndex] || colorArray[0];
+}
+
+function loadImageSrc(src) {
+	return new Promise((resolve) => {
+		const img = new Image();
+		img.onload = () => resolve(img);
+		img.src = src;
+	});
+}
+
+async function splitSheetIntoSprites(sheetImg) {
+	const sprites = [];
+	// TODO: allow different sized spritesheets
+	const sheetSize = { x: SCREEN_WIDTH, y: SCREEN_HEIGHT };
+	const spriteSize = { x: 16, y: 16 };
+	const spritesPerWidth = Math.floor(sheetSize.x / spriteSize.x);
+	const spritesPerHeight = Math.floor(sheetSize.y / spriteSize.y);
+	const canvas = document.createElement('canvas');
+	canvas.setAttribute('id', 'tempSpriteLoader');
+	canvas.width = spriteSize.x;
+	canvas.height = spriteSize.y;
+	const ctx = canvas.getContext('2d');
+	// ctx.drawImage(sheetImg, 0, 0);
+	const spriteImageUrls = [];
+	for (let y = 0; y < spritesPerHeight; y += 1) {
+		for (let x = 0; x < spritesPerWidth; x += 1) {
+			// Get a clip of the sprite image and write it to the temp sprite canvas
+			// https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+			const sx = x * spriteSize.x;
+			const sy = y * spriteSize.y;
+			ctx.drawImage(sheetImg, sx, sy, spriteSize.x, spriteSize.y, 0, 0, spriteSize.x, spriteSize.y);
+			spriteImageUrls.push(canvas.toDataURL());
+		}
+	}
+	const spriteLoadPromises = spriteImageUrls.map((url) => loadImageSrc(url));
+	const spriteLoadResults = await Promise.allSettled(spriteLoadPromises);
+	return spriteLoadResults.map((p) => p.value);
+}
 
 function err(e) {
 	console.error(e);
 }
 
-function btn(button) {
+function anyBtn() {
+	const buttonDownKeys = Object.keys(core.buttonDown);
+	for (let i = 0; i < buttonDownKeys.length; i++) {
+		if (core.buttonDown[buttonDownKeys[i]]) return true;
+	}
+	return false;
+	// const count = Object.keys(core.buttonDown).reduce(
+	// 	(sum, key) => sum + (core.buttonDown[key] ? 1 : 0),
+	// 	0,
+	// );
+	// return (count > 0);
+}
+
+function btn(button = undefined) {
+	if (button === undefined) return anyBtn();
 	let buttonIndex = (typeof button === 'number') ? button : -1;
 	if (typeof button === 'string') buttonIndex = BUTTON_NAME.indexOf(button);
 	if (buttonIndex === -1) {
@@ -39,31 +108,58 @@ function btn(button) {
 
 function cls(color = 0) {
 	const { ctx } = core;
-	ctx.fillStyle = colorArray[color];
+	ctx.fillStyle = getColor(color);
 	ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
-function spr(n, x, y, w, h, flipX, flipY) {
-	// TODO: draw sprite at x y
+function spr(n, x = 0, y = 0, w = 16, h = 16, flipX = false, flipY = false) {
+	if (n === undefined) throw new Error('Please provide a sprite index number as 1st param');
+	const sprite = core.runningProgram.sprites[n];
+	core.ctx.drawImage(sprite, x, y);
 }
 
 function print(text, x = 0, y = 0, color = 15, font = 0) {
 	const { ctx } = core;
 	ctx.font = fontsArray[font] || font || fontsArray[0];
-	ctx.fillStyle = colorArray[color] || color;
+	ctx.fillStyle = getColor(color) || color;
 	const offsetY = fontsSizeArray[font] || fontsSizeArray[0];
 	ctx.fillText(text, x + pxOffset, y + pxOffset + offsetY);
 	ctx.textBaseline = 'alphabetic';
 }
 
-// Note this is different from Pico-8, where the 3rd and 4th params are x1, y1
-function rect(x0, y0, x1, y1, color) {
+function rect(x0, y0, x1, y1, color = 15) {
 	const { ctx } = core;
 	// ctx.rect(x0, y0, x1 - x0, y1 - y0);
-	ctx.fillStyle = (typeof color === 'number') ? colorArray[color] : color;
+	ctx.fillStyle = (typeof color === 'number') ? getColor(color) : color;
 	// ctx.fill();
-	ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+	ctx.fillRect(round(x0), round(y0), round(x1 - x0), round(y1 - y0));
 }
+
+function map(celX, celY, screenX, screenY, celW, celH, layer) {
+	// TODO
+}
+
+const API = {
+	btn,
+	cls,
+	spr,
+	print,
+	rect,
+	map,
+	// Math
+	sin,
+	cos,
+	round,
+	min,
+	max,
+	// Constants
+	COLORS,
+	// New
+	clamp,
+	lerp,
+	rand,
+	randInt,
+};
 
 
 const testCart = {
@@ -91,8 +187,8 @@ const core = {
 		'q': BUTTON_B,
 		' ': BUTTON_START,
 		'Tab': BUTTON_SELECT,
-		'x': BUTTON_B,
-		'z': BUTTON_A,
+		'z': BUTTON_B,
+		'x': BUTTON_A,
 		'f': BUTTON_SELECT,
 		'r': BUTTON_START,
 		'ArrowUp': BUTTON_UP,
@@ -103,25 +199,156 @@ const core = {
 		']': BUTTON_START,
 		'h': BUTTON_SELECT,
 		'j': BUTTON_START,
-		';': BUTTON_A,
-		'\'': BUTTON_B,
-		'n': BUTTON_A,
-		'm': BUTTON_B,
-		'c': BUTTON_A,
-		'v': BUTTON_B,
+		'\'': BUTTON_A,
+		';': BUTTON_B,
+		'm': BUTTON_A,
+		'n': BUTTON_B,
+		'v': BUTTON_A,
+		'c': BUTTON_B,
 	},
 	mouseDownButton: null,
 	drawId: null,
 	updateId: null,
 	loadedCart: null,
+	runningProgram: null,
 	updateTime: 1000 / 60,
-	runCode(txt) {
-		if (!txt) return;
-		if (typeof txt === 'function') return txt();
-		// TODO: clean the string
-		return eval(txt);
+	defaultLaunchCartName: null,
+	installedCarts: {},
+	installCart(cart, options = {}) {
+		if (!cart) throw new Error('Missing cart param');
+		const name = cart.name || options.name || `Cart-${round(Math.random() * 9999)}`;
+		this.installedCarts[name] = { ...cart, loadOptions: { ...options } };
+		return this;
 	},
-	loadProgram(cart) {
+	async unloadProgram() {
+		cls();
+		this.stop();
+		this.loadedCart = null;
+		this.runningProgram = null;
+		// Wait should not be needed to allow the last draw and updates to run, but a slight delay
+		// feels nice
+		await wait(50);
+	},
+	async loadProgramByName(name) {
+		await this.unloadProgram();
+		cls();
+		console.log('Loading cart', name);
+		const cart = this.installedCarts[name];
+		if (!cart || !cart.program) {
+			this.loadedCart = null;
+			throw new Error(`Error loading cart ${name}`);
+		}
+		return this.loadProgram(cart, cart.loadOptions || {});
+	},
+	/** Will mutate the the running program to fill in the sprites array */
+	async loadProgramSprites(runningProgram, cart) {
+		const sheets = cart.spritesheets || cart.sheets;
+		if (!sheets) return;
+		const { sprites } = runningProgram;
+		const sheetPromises = sheets.map((sheet) => {
+			if (typeof sheet !== 'string') throw new Error('Non string sheets not supported yet');
+			if (sheet.substring(0, 5) !== 'data:') throw new Error('Non data uri not yet supported');
+			return loadImageSrc(sheet);
+		});
+		const sheetSettledPromises = await Promise.allSettled(sheetPromises);
+		const sheetImages = sheetSettledPromises.map((a) => a.value);
+		const splitPromises = sheetImages.map((img) => splitSheetIntoSprites(img));
+		const splitPromiseResults = await Promise.allSettled(splitPromises);
+		splitPromiseResults.forEach((r) => {
+			const spriteArr = r.value;
+			if (!spriteArr) {
+				console.warn(r.status, r.reason);
+				return;
+			}
+			spriteArr.forEach((s) => sprites.push(s));
+		});
+		return sprites;
+	},
+	async loadProgram(cart, options = {}) {
+		await this.unloadProgram();
+		cls();
+		if (!cart) throw new Error('Unknown cart');
+		this.loadedCart = cart;
+		const api = { ...API };
+		if (options.includeLaunch) api.launch = (name) => this.loadProgramByName(name || this.defaultLaunchCartName);
+
+		// function runCode(txt) {
+		// 	if (!txt) return;
+		// 	if (typeof txt === 'function') return txt(api);
+		// 	// TODO: clean the string
+		// 	return eval(txt);
+		// }
+		const { ctx } = this;
+		const nextUpdateCore = () => this.nextUpdate();
+		const nextDrawCore = () => this.nextDraw();
+		
+
+		function getScopedFn(scope, script) {
+			if (typeof script === 'function') return script.bind(scope);
+			if (typeof script !== 'string') throw new Error('Invalid script');
+			Function(`"use strict"; const $ = this; ${script}`).bind(scope);
+		}
+		const scope = (options.scope) ? { ...options.scope } : {};
+		const p = this.runningProgram = {
+			scope,
+			sprites: [],
+			_init: getScopedFn(scope, cart.program.init),
+			_draw: getScopedFn(scope, cart.program.draw),
+			_update: getScopedFn(scope, cart.program.update),
+			init() {
+				const returnedObj = this._init(api, this.scope);
+				if (returnedObj) {
+					Object.keys(returnedObj).forEach((key) => this.scope[key] = returnedObj[key]);
+				}
+				console.log('Init returned', returnedObj);
+				// runCode(cart.program.init);
+				correctColors(ctx, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+			},
+			draw() {
+				this._draw(api, this.scope);
+				correctColors(ctx, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+				// runCode(cart.program.draw);
+				nextDrawCore();
+			},
+			update() {
+				this._update(api, this.scope);
+				nextUpdateCore();
+			},
+		};
+		
+		await this.loadProgramSprites(p, cart);
+		p.init();
+
+
+		// p.sprites = 
+		// p.init = function programInit() {
+		// 	const returnedObj = p._init(api, scope);
+		// 	Object.keys(returnedObj).forEach((key) => scope[key] = returnedObj[key]);
+		// 	console.log('Init returned', returnedObj);
+		// 	// runCode(cart.program.init);
+		// 	correctColors(ctx, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+		// };
+		// p.draw = function programDraw() {
+		// 	p._draw(api, scope);
+		// 	// runCode(cart.program.draw);
+		// 	nextDraw();
+		// };
+		// p.update = function programUpdate() {
+		// 	// runCode(cart.program.update);
+		// 	p._update(api, scope);
+		// 	nextUpdate();
+		// };
+
+		
+		/*
+		const getFnText = (script) => `"use strict"; const { g } = this; ${script}`;
+		const scopedEvalFn = (scope, script) => Function(getFnText(script)).bind(scope);
+		const scope = { a: 0, g: {} }; // TODO
+		const initFn = scopedEvalFn(scope, cart.program.init)
+		*/
+		this.start();
+	},
+	testProgram(cart) {
 		this.loadedCart = cart;
 		// this.runCode(this.loadedCart.program.init);
 		// eval(this.loadedCart.program.init);
@@ -133,7 +360,6 @@ const core = {
 		const fn = Function('test', '"use strict";var x = 1; return { x };');
 		let z = fn();
 		console.log(typeof x, z);
-
 		const scopedEval = (scope, script) => Function(`"use strict"; const { g } = this; ${script}`).bind(scope)();
 		const scope = { a: 0, g: {} };
 		const s2 = scopedEval(scope, `console.log('g', g); this.a += 1; return this;`)
@@ -196,24 +422,50 @@ const core = {
 			this.mouseDownButton = null;
 		};
 	},
-	setup() {
+	setupCanvas() {
+		const canvas = document.getElementsByClassName('console-monitor-canvas')[0];
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		ctx.imageSmoothingEnabled = false;
+		ctx.translate(pxOffset, pxOffset);
+		this.ctx = ctx;
+	},
+	async setup() {
+		await loadFonts();
 		this.setupKeyboard();
 		this.setupButtons();
+		this.setupCanvas();
 	},
 	start() {
-		this.drawId = window.requestAnimationFrame(() => this.update());
-		this.updateId = window.setTimeout(() => this.update(), this.updateTime);
+		this.runningProgram.update();
+		// this.nextUpdate();
+		this.nextDraw();
 	},
-	stop() {
+	isProgramRunning() {
+		return Boolean(this.runningProgram);
+	},
+	nextUpdate() {
+		if (!this.isProgramRunning()) return;
+		this.updateId = window.setTimeout(() => {
+			if (this.isProgramRunning()) this.runningProgram.update();
+		}, this.updateTime);
+	},
+	nextDraw() {
+		if (!this.isProgramRunning()) return;
+		this.drawId = window.requestAnimationFrame(
+			(timeStamp) => {
+				if (this.isProgramRunning()) this.runningProgram.draw(timeStamp);
+			}
+		);
+	},
+	stopDraw() {
 		window.cancelAnimationFrame(this.drawId);
+	},
+	stopUpdate() {
 		window.clearTimeout(this.updateId);
 	},
-	draw() {
-		this.runCode(this.loadedCart.program.draw);
-	},
-	update() {
-		this.runCode(this.loadedCart.program.update);
-		this.updateId = window.setTimeout(() => this.update(), this.updateTime);
+	stop() {
+		this.stopUpdate();
+		this.stopDraw();
 	},
 }
 
@@ -245,26 +497,26 @@ function checkPixels() {
 	console.log('Color check:', ok, '/', c); //  notOk);
 }
 
-addEventListener('DOMContentLoaded', async () => {
-	await loadFonts();
-	const canvas = document.getElementsByClassName('console-monitor-canvas')[0];
-	const ctx = canvas.getContext('2d', { willReadFrequently: true });
-	ctx.imageSmoothingEnabled = false;
-	ctx.translate(pxOffset, pxOffset);
-	core.ctx = ctx;
-	cls(0);
-	print('LS16', 35, 110, 6, '70px BMJapan');
-	print('OWLS v0.0.0-alpha.1 2024', 75, 200);
-	print('THE SPACE AGE IS YOURS', 50, 130, 14, 1);
-	colorArray.forEach((color, i) => {
-		const x = 16 * i;
-		rect(x, 20, x + 8, 30, color);
-	});
+/** The exposed functionality for the console */
+const owls = {
+	installCart(cart) {
+		core.installCart(cart);
+		core.defaultLaunchCartName = cart.name;
+	},
+	ready(fn) {
+		addEventListener('DOMContentLoaded', async () => {
+			await core.setup();
+			const privilegedOptions = { includeLaunch: true };
+			core.installCart(splash, privilegedOptions)
+				.installCart(launcher, privilegedOptions);
+			await fn();
+			await core.loadProgram(splash, { includeLaunch: true });
+		});
+	}
+};
 
-	
-	checkPixels();
-	correctColors(ctx, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	checkPixels();
-	core.setup();
-	core.loadProgram(testCart);
-});
+// Debugging
+window.core = core;
+window.owls = owls;
+
+export { owls };

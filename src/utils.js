@@ -16,6 +16,8 @@ function pick(arr) { return arr[randInt(0, arr.length)];  }
 const wait = (ms) => (new Promise((resolve) => setTimeout(resolve, ms)));
 
 export {
+	clamp,
+	lerp,
 	loop,
 	loopAsync,
 	wait,

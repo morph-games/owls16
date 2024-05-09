@@ -5,7 +5,8 @@
   "name": "owls16",
   "description": "Open Web LS16 Fantasy Console",
   "version": "0.1.0",
-  "main": "index.js",
+  "main": "./src/console.js",
+  "type": "module",
   "dependencies": {
     "esbuild": "^0.20.2",
     "nanoid": "^3.3.7",

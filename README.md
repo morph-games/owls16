@@ -25,16 +25,28 @@ Try it out: https://morph-games.github.io/owls16
 ## To Do
 ### Core Features
 
-- [ ] Screen
-- [ ] Controller
-- [ ] Game loop
-- [ ] Sample Game
+- [X] Screen 256x224 with color palette enforcement
+- [x] Program
+- [x] Controller
+- [x] Game loop
+- [ ] Spritesheet format
+- [ ] Spritesheet loading
+- [ ] Draw spite
+- [ ] Sample sprites for splash screen
+- [ ] Sample Space-Invaders-clone Game (cartridge in js)
 
-### Ideas / Wishlist
 
+### Wishlist / Ideas
+
+- [ ] Fast tap recognition (for mobile)
+- Command line interface
 - 3D console using CSS (see OWL-BAT)
+- cartridges as JSON
+- cartridges as images
 - Show cartridges in a library
 - Ability to share cartridges
+- Lua
+- Compatibility with pico-8
 
 ## Credits
 

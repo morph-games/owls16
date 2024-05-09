@@ -3,21 +3,21 @@
 const colorArray = Object.freeze([
 	// Darker colors
 	'#000000', // 0 Black
-	'#2d006e', // purple (stand-in for dark blue)
-	'#007062', // forest green
-	'#3c80db', // sky blue (stand in for dark cyan)
-	'#800034', // dark red
-	'#6e0085', // plum
-	'#ff8f00', // Orange (stand in for brown)
-	'#7d7da3', // gray
+	'#2d006e', // 1 purple (stand-in for dark blue)
+	'#007062', // 2 forest green
+	'#3c80db', // 3 sky blue (stand in for dark cyan)
+	'#800034', // 4 dark red
+	'#6e0085', // 5 plum
+	'#ff8f00', // 6 Orange (stand in for brown)
+	'#7d7da3', // 7 gray
 	// Lighter colors
-	'#260a34', // deep purple (stand in for dark gray)
-	'#2929ff', // royal blue
-	'#0aff0a', // green
-	'#0dffff', // cyan
-	'#ff032b', // red
-	'#ff08ff', // pink
-	'#ffff0d', // Yellow
+	'#260a34', // 8 deep purple (stand in for dark gray)
+	'#2929ff', // 9 royal blue
+	'#0aff0a', // 10 green
+	'#0dffff', // 11 cyan
+	'#ff032b', // 12 red
+	'#ff08ff', // 13 pink
+	'#ffff0d', // 14 Yellow
 	'#ffffff', // 15 White
 ]);
 const rgbColorArray = Object.freeze(colorArray.map((c) => hexToRGB(c)));
@@ -73,7 +73,7 @@ function correctColors(ctx, x, y, w, h) {
 	}
 	// ctx.clearRect(0, 0, w, h);
 	ctx.putImageData(imageData, x, y);
-	console.log('Corrected', fixed, 'pixels');
+	// console.log('Corrected', fixed, 'pixels');
 }
 
 export { colorArray, rgbColorArray, rgbToHexColor, correctColors };
