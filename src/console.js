@@ -105,7 +105,9 @@ async function splitSheetIntoSprites(sheetImg) {
 			const sx = x * spriteSize.x;
 			const sy = y * spriteSize.y;
 			ctx.drawImage(sheetImg, sx, sy, spriteSize.x, spriteSize.y, 0, 0, spriteSize.x, spriteSize.y);
+			correctColors(ctx, 0, 0, canvas.width, canvas.height);
 			spriteImageUrls.push(canvas.toDataURL());
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
 		}
 	}
 	const spriteLoadPromises = spriteImageUrls.map((url) => loadImageSrc(url));
@@ -334,16 +336,27 @@ const API = {
 	// ---------- Constants
 	COLORS,
 	NIL, // aka. null
+	SCREEN_WIDTH,
+	SCREEN_HEIGHT,
 
 	// ---------- New methods
 	clamp,
 	lerp,
 	rand,
 	randInt,
+	pick,
+	log(...args) {
+		if (core.logCount < 100) console.log(...args);
+		core.logCount += 1;
+	},
+	aabb([x1, y1, w1, h1], [x2, y2, w2, h2]) {
+		return (x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2);
+	}
 };
 
 const core = {
 	ctx: null, // main canvas / screen context
+	logCount: 0, // TODO: need a way to reset this
 	keyDown: {},
 	buttonDown: {},
 	domButtons: {},

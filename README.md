@@ -29,15 +29,18 @@ Try it out: https://morph-games.github.io/owls16
 - [x] Program
 - [x] Controller
 - [x] Game loop
-- [ ] Spritesheet format
-- [ ] Spritesheet loading
-- [ ] Draw spite
+- [x] Spritesheet format
+- [x] Spritesheet loading
+- [x] Draw spite
 - [ ] Sample sprites for splash screen
+- [ ] Backgrounds
 - [ ] Sample Space-Invaders-clone Game (cartridge in js)
-
+- [ ] Limit to 64 sprites on screen
 
 ### Wishlist / Ideas
 
+- [ ] Music
+- [ ] Draw to buffer before color correction and final draw
 - Allow `btnp` function to get retriggered if button is held down after some delay
 - System UI
 	- [ ] Show cartridge in system UI (center)
