@@ -3,6 +3,7 @@ import { loadFonts, fontsArray, fontsSizeArray } from './fonts.js';
 import { colorArray, rgbToHexColor, correctColors } from './colors.js';
 import splash from './splash.js';
 import launcher from './launcher.js';
+import zzfx from './libs/ZzFXMicro.esm.min.js';
 
 const SCREEN_WIDTH = 256;
 const SCREEN_HEIGHT = 224;
@@ -26,7 +27,7 @@ const DEFAULT_KEYMAP = {
 	'd': BUTTON_RIGHT,
 	'e': BUTTON_A,
 	'q': BUTTON_B,
-	' ': BUTTON_START,
+	// ' ': BUTTON_START,
 	'Tab': BUTTON_SELECT,
 	'z': BUTTON_B,
 	'x': BUTTON_A,
@@ -47,6 +48,7 @@ const DEFAULT_KEYMAP = {
 	'v': BUTTON_A,
 	'c': BUTTON_B,
 };
+const KEY_DOWN = 1, KEY_UP = 0;
 const NOT_DOWN = 0;
 const DOWN_FIRST = 1;
 const DOWN_REPEAT = 2;
@@ -55,7 +57,7 @@ const NOOP = () => {};
 const NIL = null, nil = null; // For pico-8 compatibility
 const pxOffset = 0;
 
-const { round, sin, cos, min, max } = Math;
+const { round, sin, cos, atan2, min, max, ceil, floor, abs, sqrt } = Math;
 
 function getColor(colorParam) {
 	let colorIndex = 0;
@@ -87,8 +89,8 @@ async function splitSheetIntoSprites(sheetImg) {
 	// TODO: allow different sized spritesheets
 	const sheetSize = { x: SCREEN_WIDTH, y: SCREEN_HEIGHT };
 	const spriteSize = { x: 16, y: 16 };
-	const spritesPerWidth = Math.floor(sheetSize.x / spriteSize.x);
-	const spritesPerHeight = Math.floor(sheetSize.y / spriteSize.y);
+	const spritesPerWidth = floor(sheetSize.x / spriteSize.x);
+	const spritesPerHeight = floor(sheetSize.y / spriteSize.y);
 	const canvas = document.createElement('canvas');
 	canvas.setAttribute('id', 'tempSpriteLoader');
 	canvas.width = spriteSize.x;
@@ -123,16 +125,7 @@ function anyBtn() {
 	return false;
 }
 
-function btn(button = undefined) {
-	if (button === undefined) return anyBtn();
-	let buttonIndex = (typeof button === 'number') ? button : -1;
-	if (typeof button === 'string') buttonIndex = BUTTON_NAME.indexOf(button);
-	if (buttonIndex === -1) {
-		err(`Invalid button ${button}`);
-		return false;
-	}
-	return core.buttonDown[buttonIndex];
-}
+
 
 function cls(color = 0) {
 	const { ctx } = core;
@@ -167,22 +160,182 @@ function map(celX, celY, screenX, screenY, celW, celH, layer) {
 	// TODO
 }
 
+
+// ---------- Controls
+
+function btn(button = undefined, player = 0) {
+	if (button === undefined) return anyBtn();
+	let buttonIndex = (typeof button === 'number') ? button : -1;
+	if (typeof button === 'string') buttonIndex = BUTTON_NAME.indexOf(button);
+	if (buttonIndex === -1) {
+		err(`Invalid button ${button}`);
+		return false;
+	}
+	return core.buttonDown[buttonIndex];
+}
+
+/** checks if a button has been pressed but not during the previous frame */
+function btnp(button = undefined, player = 0) {
+	return (btn(button) === 1);
+}
+
+// ---------- Math
+
+
+
 const API = {
-	btn,
 	cls,
-	spr,
+	
 	print,
+
+	// ---------- Tables
+	// ???
+	// ---------- Loops
+	// ???
+
+	// ---------- Shrink Code
+	// foreach
+	// ???
+
+	// ---------- Cartridge Data
+	// ???
+
+	// ---------- Memory Manipulation
+	// ???
+
+	// ---------- CoRoutines
+	// ???
+
+	// ---------- Sprites
+	spr,
+	// sspr
+	// sget
+	// sset
+
+	// ---------- Colors
+	// ---------- Pixels
+
+	// ---------- Sprite Flag
+	fget(n, f) {
+
+	},
+	fset(n, f, v) {
+
+	},
+
+	// ---------- Shapes
 	rect,
+	rectfill(x0, y0, x1, y1, col) {
+
+	},
+	circ(x, y, r, col) {
+
+	},
+	circfill(x, y, r, col) {
+
+	},
+	line(x0, y0, x1, y1, col) {
+
+	},
+
+	// ---------- Screen
+	camera(x, y) {
+		// TODO
+	},
+	clip(x, y, w, h) {
+		// TODO
+	},
+	color(col) {
+		// TODO
+	},
+	// ---------- Map
 	map,
-	// Math
+	mget(x, y) {
+		// TODO
+	},
+	mset(x, y, v) {
+		// TODO
+	},
+	
+	// ---------- Controls
+	btn,
+	btnp,
+
+	// ---------- String Manipulation and Types
+	sub(str, from, to) { return str.substring(from, to); },
+	type(x) { return typeof x; },
+	tostr(x) { return String(x); },
+	tonum(x) { return Number(x); },
+
+	// ---------- Sound
+	sfx(n, channel, offset, length) {
+		const soundArr = core.runningProgram.sounds[n];
+		// play a default sound if
+		if (!soundArr || !(soundArr instanceof Array)) {
+			console.log('Sound', n, 'not found. Playing default sound instead');
+			zzfx(...[,,,.08,,0,2,2.92,4.8,,,,,.1,,.1,,.76]);
+			return;
+		}
+		zzfx(...soundArr);
+		// TODO: Handle channel, offset, length
+	},
+	music(n, fade, mask) {
+		// TODO
+	},
+
+	// ---------- Math
+	// Math (native in the Math object)
+	abs,
 	sin,
+	atan2,
 	cos,
 	round,
 	min,
 	max,
-	// Constants
+	floor,
+	sqrt,
+	ceil,
+	// Math extra (not in the js Math object)
+	band() {
+		// TODO
+	},
+	bnot() {
+		// TODO
+	},
+	bor() {
+		// TODO
+	},
+	bxor() {
+		// TODO
+	},
+	shl() {
+		// TODO
+	},
+	shr() {
+		// TODO
+	},
+	lshr() {
+		// TODO
+	},
+	sgn() {
+		// TODO
+	},
+	mid(x, y, z) {
+		// TODO
+	},
+	rnd() {
+		// TODO -- https://pico-8.fandom.com/wiki/Rnd
+	},
+	srand() {
+		// TODO - seeded random
+	},
+	flr: Math.floor, // alias to match pico-8
+
+	// ---------- Constants
 	COLORS,
-	// New
+	NIL, // aka. null
+
+	// ---------- New methods
 	clamp,
 	lerp,
 	rand,
@@ -199,7 +352,7 @@ const core = {
 	drawId: null,
 	updateId: null,
 	loadedCart: null,
-	runningProgram: null,
+	runningProgram:  null,
 	updateTime: 1000 / 60, // Every 16.67 ms = 60 updates per second
 	defaultLaunchCartName: null,
 	installedCarts: {},
@@ -253,6 +406,16 @@ const core = {
 		});
 		return sprites;
 	},
+	async loadProgramSounds(runningProgram, cart) {
+		(cart.sounds || [])
+			.filter((s) => (s && s instanceof Array))
+			.forEach((s) => runningProgram.sounds.push(s));
+	},
+	async loadProgramMusic(runningProgram, cart) {
+		(cart.music || [])
+			.filter((s) => (s && s instanceof Array))
+			.forEach((s) => runningProgram.music.push(s));
+	},
 	async loadProgram(cart, options = {}) {
 		await this.unloadProgram();
 		cls();
@@ -264,12 +427,15 @@ const core = {
 		const { ctx } = this;
 		const nextUpdateCore = () => this.nextUpdate();
 		const nextDrawCore = () => this.nextDraw();
+		const coreUpdateButtons = () => this.updateButtons();
 
 		const scriptHeader = 'const $ = this; console.log(api);';
 		const scope = (options.scope) ? { ...options.scope } : {};
 		const p = this.runningProgram = {
 			scope,
 			sprites: [],
+			sounds: [],
+			music: [],
 			_init: getScopedFn(scope, cart.program.init, scriptHeader),
 			_draw: getScopedFn(scope, cart.program.draw, scriptHeader),
 			_update: getScopedFn(scope, cart.program.update, scriptHeader),
@@ -288,12 +454,15 @@ const core = {
 			},
 			update() {
 				this._update(api, this.scope);
+				coreUpdateButtons();
 				// We could do a correctColors here in case the program draws in the update fn
 				// but this is not recommended, and will be quickly overwritten by the draw method
 				nextUpdateCore();
 			},
 		};
 		await this.loadProgramSprites(p, cart);
+		await this.loadProgramSounds(p, cart);
+		await this.loadProgramMusic(p, cart);
 		p.init();
 		this.start();
 	},
@@ -306,18 +475,26 @@ const core = {
 			if (!this.domButtons[i]) this.domButtons[i] = [];
 			this.domButtons[i].push(elt);
 			const handleHit = (e) => {
-				this.pushButton(i, DOWN_FIRST);
+				this.pushButton(i);
 				this.mouseDownButton = i;
 			};
 			elt.ontouchstart = handleHit;
 			elt.onmousedown = handleHit;
 		});
 	},
-	pushButton(button, down = DOWN_FIRST) {
-		if (button === undefined) return;
-		this.buttonDown[button] = down;
-		if (this.domButtons[button]) {
-			this.domButtons[button].forEach((elt) => elt.classList.add('cc-button--active'));
+	updateButtons() {
+		Object.keys(this.buttonDown).forEach((buttonId) => {
+			if (this.buttonDown[buttonId] === DOWN_FIRST) this.buttonDown[buttonId] = 2;
+			// TODO? - should we update the --active class here too?
+		});
+	},
+	pushButton(buttonId, player = 0) {
+		if (buttonId === undefined) return;
+		if (!this.buttonDown[buttonId]) this.buttonDown[buttonId] = DOWN_FIRST;
+		else if (this.buttonDown[buttonId] >= 2) this.buttonDown[buttonId] += 1;
+		// Note that if the value is 1 then we do nothing to the value (this is only incremented by the update function)
+		if (this.domButtons[buttonId]) {
+			this.domButtons[buttonId].forEach((elt) => elt.classList.add('cc-button--active'));
 		}
 	},
 	liftButton(button) {
@@ -332,22 +509,23 @@ const core = {
 		window.onkeydown = (e) => {
 			// treat all single keys as lowercase
 			const key = fkey(e);
-			const down = e.repeat ? DOWN_REPEAT : DOWN_FIRST;
-			this.keyDown[key] = down;
-			this.pushButton(this.keyMap[key], down);
+			this.keyDown[key] = KEY_DOWN;
+			this.pushButton(this.keyMap[key]);
 			if (this.keyMap[key] === undefined) console.log('Unmapped key:', key);
 			e.preventDefault();
 			// if (!e.repeat) console.log(this.buttonDown, this.keyDown);
 		};
 		window.onkeyup = (e) => {
 			const key = fkey(e);
-			this.keyDown[key] = NOT_DOWN;
+			this.keyDown[key] = KEY_UP;
 			this.liftButton(this.keyMap[key])
 		};
-		window.onmouseup = (e) => {
+		const handleHitDone = (e) => {
 			this.liftButton(this.mouseDownButton);
 			this.mouseDownButton = null;
 		};
+		window.onmouseup = handleHitDone;
+		window.ontouchend = handleHitDone;
 	},
 	setupCanvas() {
 		const canvas = document.getElementsByClassName('console-monitor-canvas')[0];
@@ -401,7 +579,7 @@ function test(ctx) {
 		const c = pick(colorArray);
 		const x = randInt(0, SCREEN_WIDTH);
 		const y = randInt(0, SCREEN_HEIGHT);
-		const size = randInt(1, Math.ceil(i / 200));
+		const size = randInt(1, ceil(i / 200));
 		ctx.fillStyle = c;
 		ctx.fillRect(x, y, size, size);
 		// await wait(1);

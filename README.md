@@ -38,11 +38,16 @@ Try it out: https://morph-games.github.io/owls16
 
 ### Wishlist / Ideas
 
+- Allow `btnp` function to get retriggered if button is held down after some delay
+- System UI
+	- [ ] Show cartridge in system UI (center)
+	- [ ] Show controller cord connection
 - [ ] Fast tap recognition (for mobile)
 - Command line interface
 - 3D console using CSS (see OWL-BAT)
 - cartridges as JSON
 - cartridges as images
+- Different carts based on how they're saved: "T" = Temp cart (in memory, in development), "B" = Browser (IndexedDB), "M" = Local machine / drive, "S" = Cloud backed-up. Maybe a different color for each?
 - Show cartridges in a library
 - Ability to share cartridges
 - Lua
