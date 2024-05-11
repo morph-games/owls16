@@ -34,6 +34,7 @@ Try it out: https://morph-games.github.io/owls16
 - [x] Draw spite
 - [ ] Sample sprites for splash screen
 - [ ] Backgrounds
+- [ ] tilemaps
 - [ ] Sample Space-Invaders-clone Game (cartridge in js)
 - [ ] Limit to 64 sprites on screen
 
