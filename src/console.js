@@ -7,6 +7,7 @@ import zzfx from './libs/ZzFXMicro.esm.min.js';
 
 const SCREEN_WIDTH = 256;
 const SCREEN_HEIGHT = 224;
+const IMAGE_WIDTH = 256, IMAGE_HEIGHT = 256;
 const BUTTON_A = 4, BUTTON_B = 5,
 	BUTTON_UP = 2, BUTTON_RIGHT = 1, BUTTON_DOWN = 3, BUTTON_LEFT = 0,
 	BUTTON_START = 6, BUTTON_SELECT = 7;
@@ -55,6 +56,7 @@ const DOWN_REPEAT = 2;
 const COLORS = colorArray;
 const NOOP = () => {};
 const NIL = null, nil = null; // For pico-8 compatibility
+const BG_NO_REPEAT = 0, BG_REPEAT = 1, BG_REPEAT_X = 2, BG_REPEAT_Y = 3;
 const pxOffset = 0;
 
 const { round, sin, cos, atan2, min, max, ceil, floor, abs, sqrt } = Math;
@@ -83,6 +85,17 @@ function loadImageSrc(src) {
 		img.onload = () => resolve(img);
 		img.src = src;
 	});
+}
+
+async function loadCartImages(arr = []) {
+	const loadPromises = arr.map((imgStr) => {
+		if (typeof imgStr !== 'string') throw new Error('Non string images not supported yet');
+		if (imgStr.substring(0, 5) !== 'data:') throw new Error('Non data uri not yet supported');
+		return loadImageSrc(imgStr);
+	});
+	const loadSettledPromises = await Promise.allSettled(loadPromises);
+	const images = loadSettledPromises.map((a) => a.value);
+	return images;
 }
 
 async function splitSheetIntoSprites(sheetImg) {
@@ -128,7 +141,7 @@ function anyBtn() {
 }
 
 
-
+/** Clears the screen */
 function cls(color = 0) {
 	const { ctx } = core;
 	ctx.fillStyle = getColor(color);
@@ -210,12 +223,52 @@ const API = {
 
 	// ---------- Sprites
 	spr,
+	/** Unlike spr(), this function uses pixel locations on the sprite sheet instead of sprite numbers */
 	// sspr
-	// sget
-	// sset
+	/** Get color value of pixel on the sprite sheet */
+	sget(x, y) {
+		// TODO
+	},
+	/** Sets color value of pixel on the sprite sheet */
+	sset(x, y, c) {
+		// TODO
+	},
+	/** New (non-pico-8) - Set the background with an image - WIP */
+	bg(n = 0, x = 0, y = 0, repeat = BG_NO_REPEAT, w, h, flipX = false, flipY = false) {
+		if (n === undefined) throw new Error('Please provide a bg index number as 1st param');
+		const { runningProgram, ctx } = core;
+		const bg = runningProgram.backgrounds[n];
+		if (x < 0) x = IMAGE_WIDTH + (x % IMAGE_WIDTH);
+		if (y < 0) y = IMAGE_HEIGHT + (y % IMAGE_HEIGHT);
+		x = x % SCREEN_WIDTH;
+		y = y % IMAGE_HEIGHT;
+		ctx.drawImage(bg, x, y);
+		if ((repeat === BG_REPEAT || repeat === BG_REPEAT_X) && x !== 0) {
+			ctx.drawImage(bg, x - IMAGE_WIDTH, y);
+		}
+		if ((repeat === BG_REPEAT || repeat === BG_REPEAT_Y) && y !== 0) {
+			ctx.drawImage(bg, x, y - IMAGE_HEIGHT);
+		}
+		if (repeat === BG_REPEAT && y !== 0 && x !== 0) {
+			ctx.drawImage(bg, x - IMAGE_WIDTH, y - IMAGE_HEIGHT);
+		}
+	},
 
 	// ---------- Colors
+	pal(c0, c1, p) {
+		// ???
+	},
+	palt(col, t) {
+		// ???
+	},
+
 	// ---------- Pixels
+	pget(x, y) {
+		// TODO
+	},
+	pset(x, y, col) {
+		// TODO
+	},
 
 	// ---------- Sprite Flag
 	fget(n, f) {
@@ -400,13 +453,7 @@ const core = {
 		const sheets = cart.spritesheets || cart.sheets;
 		if (!sheets) return;
 		const { sprites } = runningProgram;
-		const sheetPromises = sheets.map((sheet) => {
-			if (typeof sheet !== 'string') throw new Error('Non string sheets not supported yet');
-			if (sheet.substring(0, 5) !== 'data:') throw new Error('Non data uri not yet supported');
-			return loadImageSrc(sheet);
-		});
-		const sheetSettledPromises = await Promise.allSettled(sheetPromises);
-		const sheetImages = sheetSettledPromises.map((a) => a.value);
+		const sheetImages = await loadCartImages(sheets);
 		const splitPromises = sheetImages.map((img) => splitSheetIntoSprites(img));
 		const splitPromiseResults = await Promise.allSettled(splitPromises);
 		splitPromiseResults.forEach((r) => {
@@ -418,6 +465,15 @@ const core = {
 			spriteArr.forEach((s) => sprites.push(s));
 		});
 		return sprites;
+	},
+	/** Will mutate the the running program to fill in the backgrounds array */
+	async loadProgramBackgrounds(runningProgram, cart) {
+		const bgs = cart.backgrounds || cart.bgs || cart.bg;
+		if (!bgs) return;
+		const { backgrounds } = runningProgram;
+		const sheetImages = await loadCartImages(bgs);
+		sheetImages.forEach((img) => backgrounds.push(img));
+		return backgrounds;
 	},
 	async loadProgramSounds(runningProgram, cart) {
 		(cart.sounds || [])
@@ -447,6 +503,7 @@ const core = {
 		const p = this.runningProgram = {
 			scope,
 			sprites: [],
+			backgrounds: [],
 			sounds: [],
 			music: [],
 			_init: getScopedFn(scope, cart.program.init, scriptHeader),
@@ -474,6 +531,7 @@ const core = {
 			},
 		};
 		await this.loadProgramSprites(p, cart);
+		await this.loadProgramBackgrounds(p, cart);
 		await this.loadProgramSounds(p, cart);
 		await this.loadProgramMusic(p, cart);
 		p.init();
@@ -539,6 +597,7 @@ const core = {
 		};
 		window.onmouseup = handleHitDone;
 		window.ontouchend = handleHitDone;
+		window.ontouchcancel = handleHitDone;
 	},
 	setupCanvas() {
 		const canvas = document.getElementsByClassName('console-monitor-canvas')[0];

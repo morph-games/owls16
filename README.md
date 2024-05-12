@@ -32,7 +32,7 @@ Try it out: https://morph-games.github.io/owls16
 - [x] Spritesheet format
 - [x] Spritesheet loading
 - [x] Draw spite
-- [ ] Sample sprites for splash screen
+- [ ] Fix multi-touch issue
 - [ ] Backgrounds
 - [ ] tilemaps
 - [ ] Sample Space-Invaders-clone Game (cartridge in js)
@@ -40,6 +40,7 @@ Try it out: https://morph-games.github.io/owls16
 
 ### Wishlist / Ideas
 
+- [ ] Sample sprites for splash screen
 - [ ] Music
 - [ ] Draw to buffer before color correction and final draw
 - Allow `btnp` function to get retriggered if button is held down after some delay
