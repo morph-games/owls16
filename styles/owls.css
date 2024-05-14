@@ -92,6 +92,7 @@ main.view-console .console {
 	border-radius: var(--console-system-curve);
 	box-shadow: 0 .8vmin 1vmin rgba(0, 0, 0, .5);
 	text-align: center;
+	display: none; /* TODO: Show me */
 }
 
 .console-controller {

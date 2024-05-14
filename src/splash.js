@@ -25,15 +25,15 @@ export default {
 			});
 			if (btn() && launch) launch('launcher');
 		},
-		draw({ cls, print, rect }, { blocks }) {
+		draw({ cls, print, rectfill }, { blocks }) {
 			cls(0);
 			blocks.forEach((b) => {
-				rect(b.x, b.y, b.x + b.w, b.y + b.h, b.color);
+				rectfill(b.x, b.y, b.x + b.w, b.y + b.h, b.color);
 			});
 			print('LS16', 35, 140, 6, '70px BMJapan');
 			print('THE SPACE AGE IS YOURS', 50, 160, 14, 1);
 			print('Press any button to continue', 75, 180, 3);
-			print('OWLS v0.0.0-alpha.1 2024', 75, 200, 1);
+			print('OWLS v0.1.0-alpha.1 2024', 75, 200, 1);
 		},
 	},
 };

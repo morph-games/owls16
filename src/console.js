@@ -5,6 +5,8 @@ import splash from './splash.js';
 import launcher from './launcher.js';
 import zzfx from './libs/ZzFXMicro.esm.min.js';
 
+const MAX_SPRITES = 64;
+const MAX_BACKGROUNDS = 4;
 const SCREEN_WIDTH = 256;
 const SCREEN_HEIGHT = 224;
 const IMAGE_WIDTH = 256, IMAGE_HEIGHT = 256;
@@ -59,7 +61,7 @@ const NIL = null, nil = null; // For pico-8 compatibility
 const BG_NO_REPEAT = 0, BG_REPEAT = 1, BG_REPEAT_X = 2, BG_REPEAT_Y = 3;
 const pxOffset = 0;
 
-const { round, sin, cos, atan2, min, max, ceil, floor, abs, sqrt } = Math;
+const { round, sin, cos, atan2, min, max, ceil, floor, abs, sqrt, sign } = Math;
 
 function getColor(colorParam) {
 	let colorIndex = 0;
@@ -150,8 +152,11 @@ function cls(color = 0) {
 
 function spr(n, x = 0, y = 0, w = 16, h = 16, flipX = false, flipY = false) {
 	if (n === undefined) throw new Error('Please provide a sprite index number as 1st param');
+	if (core.spriteCount >= MAX_SPRITES) return 0;
 	const sprite = core.runningProgram.sprites[n];
 	core.ctx.drawImage(sprite, x, y);
+	core.spriteCount += 1;
+	return MAX_SPRITES - core.spriteCount;
 }
 
 function print(text, x = 0, y = 0, color = 15, font = 0) {
@@ -163,16 +168,22 @@ function print(text, x = 0, y = 0, color = 15, font = 0) {
 	ctx.textBaseline = 'alphabetic';
 }
 
-function rect(x0, y0, x1, y1, color = 15) {
-	const { ctx } = core;
-	// ctx.rect(x0, y0, x1 - x0, y1 - y0);
-	ctx.fillStyle = (typeof color === 'number') ? getColor(color) : color;
-	// ctx.fill();
-	ctx.fillRect(round(x0), round(y0), round(x1 - x0), round(y1 - y0));
-}
-
 function map(celX, celY, screenX, screenY, celW, celH, layer) {
 	// TODO
+}
+
+function rect(x0, y0, x1, y1, color = 15) {
+	const { ctx } = core;
+	ctx.strokeStyle = (typeof color === 'number') ? getColor(color) : color;
+	ctx.lineWidth = 1;
+	ctx.lineJoin = 'round';
+	ctx.strokeRect(round(x0), round(y0), round(x1 - x0), round(y1 - y0));
+}
+
+function rectfill(x0, y0, x1, y1, color = 15) {
+	const { ctx } = core;
+	ctx.fillStyle = (typeof color === 'number') ? getColor(color) : color;
+	ctx.fillRect(round(x0), round(y0), round(x1 - x0), round(y1 - y0));
 }
 
 
@@ -236,6 +247,7 @@ const API = {
 	/** New (non-pico-8) - Set the background with an image - WIP */
 	bg(n = 0, x = 0, y = 0, repeat = BG_NO_REPEAT, w, h, flipX = false, flipY = false) {
 		if (n === undefined) throw new Error('Please provide a bg index number as 1st param');
+		if (core.backgroundCount >= MAX_BACKGROUNDS) return 0;
 		const { runningProgram, ctx } = core;
 		const bg = runningProgram.backgrounds[n];
 		if (x < 0) x = IMAGE_WIDTH + (x % IMAGE_WIDTH);
@@ -252,6 +264,7 @@ const API = {
 		if (repeat === BG_REPEAT && y !== 0 && x !== 0) {
 			ctx.drawImage(bg, x - IMAGE_WIDTH, y - IMAGE_HEIGHT);
 		}
+		return MAX_BACKGROUNDS - core.backgroundCount;
 	},
 
 	// ---------- Colors
@@ -267,7 +280,7 @@ const API = {
 		// TODO
 	},
 	pset(x, y, col) {
-		// TODO
+		rectfill(x, y, x + 1, y + 1, col);
 	},
 
 	// ---------- Sprite Flag
@@ -280,9 +293,7 @@ const API = {
 
 	// ---------- Shapes
 	rect,
-	rectfill(x0, y0, x1, y1, col) {
-
-	},
+	rectfill,
 	circ(x, y, r, col) {
 
 	},
@@ -348,43 +359,27 @@ const API = {
 	min,
 	max,
 	floor,
+	flr: floor, // alias to match pico-8
 	sqrt,
 	ceil,
+	sign,
+	sgn: sign, // alias to match pico-8
 	// Math extra (not in the js Math object)
-	band() {
-		// TODO
+	band(a, b) { return a & b; },
+	bnot(num) { return ~num; },
+	bor(a, b) { return a | b; },
+	bxor(a, b) { return a ^ b; },
+	shl(num, bits) { return num << bits; },
+	shr(num, bits) { return num >> bits; },
+	mid(a, b, c) {
+		[a, b, c] = [a, b, c].sort((x, y) => x - y);
+		return b;
 	},
-	bnot() {
-		// TODO
-	},
-	bor() {
-		// TODO
-	},
-	bxor() {
-		// TODO
-	},
-	shl() {
-		// TODO
-	},
-	shr() {
-		// TODO
-	},
-	lshr() {
-		// TODO
-	},
-	sgn() {
-		// TODO
-	},
-	mid(x, y, z) {
-		// TODO
-	},
-	rnd() {
-		// TODO -- https://pico-8.fandom.com/wiki/Rnd
-	},
+	rnd(n) { return rand(n, 0); },
 	srand() {
 		// TODO - seeded random
 	},
-	flr: Math.floor, // alias to match pico-8
+	
 
 	// ---------- Constants
 	COLORS,
@@ -398,6 +393,10 @@ const API = {
 	rand,
 	randInt,
 	pick,
+	/** Returns first parm modulo the second param, but adjusted so negative numbers work as expected */
+	mod(dividend, divisor = 1) {
+		return ((dividend % divisor) + divisor) % divisor;
+	},
 	log(...args) {
 		if (core.logCount < 100) console.log(...args);
 		core.logCount += 1;
@@ -409,6 +408,8 @@ const API = {
 
 const core = {
 	ctx: null, // main canvas / screen context
+	spriteCount: 0,
+	backgroundCount: 0,
 	logCount: 0, // TODO: need a way to reset this
 	keyDown: {},
 	buttonDown: {},
@@ -518,6 +519,8 @@ const core = {
 				correctColors(ctx, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 			},
 			draw() {
+				core.backgroundCount = 0;
+				core.spriteCount = 0;
 				this._draw(api, this.scope);
 				correctColors(ctx, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 				nextDrawCore();
