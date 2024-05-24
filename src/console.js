@@ -415,7 +415,7 @@ const core = {
 	buttonDown: {},
 	domButtons: {},
 	keyMap: { ...DEFAULT_KEYMAP },
-	fingerDown: [],
+	pointerDown: [],
 	drawId: null,
 	updateId: null,
 	loadedCart: null,
@@ -557,9 +557,9 @@ const core = {
 			const handleFingerOn = (e) => {
 				e.preventDefault();
 				this.pushButton(i);
-				this.fingerDown[i] = { // "finger" object
+				this.pointerDown[i] = { // "pointer" / "finger" object
 					identifier: getEventIdentifier(e),
-					event: e,
+					event: e, // for debugging
 					buttonId: i,
 				};
 			};
@@ -568,12 +568,12 @@ const core = {
 		});
 		const handleFingerOff = (e) => {
 			const myIdentifier = getEventIdentifier(e);
-			this.fingerDown.forEach((finger) => {
-				if (!finger) return;
-				const { identifier, buttonId } = finger;
+			this.pointerDown.forEach((pointer) => {
+				if (!pointer) return;
+				const { identifier, buttonId } = pointer;
 				if (identifier !== myIdentifier) return;
 				this.liftButton(buttonId);
-				this.fingerDown[buttonId] = null;
+				this.pointerDown[buttonId] = null;
 			});
 		};
 		window.onmouseup = handleFingerOff;
