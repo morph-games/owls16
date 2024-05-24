@@ -415,7 +415,7 @@ const core = {
 	buttonDown: {},
 	domButtons: {},
 	keyMap: { ...DEFAULT_KEYMAP },
-	mouseDownButton: null,
+	fingerDown: [],
 	drawId: null,
 	updateId: null,
 	loadedCart: null,
@@ -542,19 +542,43 @@ const core = {
 	},
 	setupButtons() {
 		const buttons = document.getElementsByClassName('cc-button');
+		const getEventIdentifier = (e) => {
+			// Safe to assume this is always the first changed touch?
+			if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].identifier;
+			if (e.type.substring(0, 5) === 'mouse') return 'mouse';
+			return 'unknown';
+		};
 		Array.from(buttons).forEach((elt) => {
 			if (!elt.dataset.buttonname) return;
 			const i = BUTTON_NAME.indexOf(elt.dataset.buttonname);
 			if (i === -1) return;
 			if (!this.domButtons[i]) this.domButtons[i] = [];
 			this.domButtons[i].push(elt);
-			const handleHit = (e) => {
+			const handleFingerOn = (e) => {
+				e.preventDefault();
 				this.pushButton(i);
-				this.mouseDownButton = i;
+				this.fingerDown[i] = { // "finger" object
+					identifier: getEventIdentifier(e),
+					event: e,
+					buttonId: i,
+				};
 			};
-			elt.ontouchstart = handleHit;
-			elt.onmousedown = handleHit;
+			elt.ontouchstart = handleFingerOn;
+			elt.onmousedown = handleFingerOn;
 		});
+		const handleFingerOff = (e) => {
+			const myIdentifier = getEventIdentifier(e);
+			this.fingerDown.forEach((finger) => {
+				if (!finger) return;
+				const { identifier, buttonId } = finger;
+				if (identifier !== myIdentifier) return;
+				this.liftButton(buttonId);
+				this.fingerDown[buttonId] = null;
+			});
+		};
+		window.onmouseup = handleFingerOff;
+		window.ontouchend = handleFingerOff;
+		window.ontouchcancel = handleFingerOff;
 	},
 	updateButtons() {
 		Object.keys(this.buttonDown).forEach((buttonId) => {
@@ -571,11 +595,11 @@ const core = {
 			this.domButtons[buttonId].forEach((elt) => elt.classList.add('cc-button--active'));
 		}
 	},
-	liftButton(button) {
-		if (button === undefined) return;
-		this.buttonDown[button] = NOT_DOWN;
-		if (this.domButtons[button]) {
-			this.domButtons[button].forEach((elt) => elt.classList.remove('cc-button--active'));
+	liftButton(buttonId) {
+		if (buttonId === undefined) return;
+		this.buttonDown[buttonId] = NOT_DOWN;
+		if (this.domButtons[buttonId]) {
+			this.domButtons[buttonId].forEach((elt) => elt.classList.remove('cc-button--active'));
 		}
 	},
 	setupKeyboard() {
@@ -594,13 +618,6 @@ const core = {
 			this.keyDown[key] = KEY_UP;
 			this.liftButton(this.keyMap[key])
 		};
-		const handleHitDone = (e) => {
-			this.liftButton(this.mouseDownButton);
-			this.mouseDownButton = null;
-		};
-		window.onmouseup = handleHitDone;
-		window.ontouchend = handleHitDone;
-		window.ontouchcancel = handleHitDone;
 	},
 	setupCanvas() {
 		const canvas = document.getElementsByClassName('console-monitor-canvas')[0];

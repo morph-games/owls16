@@ -124,6 +124,7 @@ main.view-console .console {
 	/* padding: calc(var(--controller-size-unit) / 20); */
 	transition: all .1s ease-in-out;
 	transform: scale(1.01);
+	user-select: none;
 }
 .cc-button:active,
 .cc-button--active {
