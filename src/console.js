@@ -142,7 +142,6 @@ function anyBtn() {
 	return false;
 }
 
-
 /** Clears the screen */
 function cls(color = 0) {
 	const { ctx } = core;
@@ -186,7 +185,6 @@ function rectfill(x0, y0, x1, y1, color = 15) {
 	ctx.fillRect(round(x0), round(y0), round(x1 - x0), round(y1 - y0));
 }
 
-
 // ---------- Controls
 
 function btn(button = undefined, player = 0) {
@@ -205,13 +203,8 @@ function btnp(button = undefined, player = 0) {
 	return (btn(button) === 1);
 }
 
-// ---------- Math
-
-
-
 const API = {
 	cls,
-	
 	print,
 
 	// ---------- Tables
@@ -322,7 +315,7 @@ const API = {
 	mset(x, y, v) {
 		// TODO
 	},
-	
+
 	// ---------- Controls
 	btn,
 	btnp,
@@ -365,21 +358,23 @@ const API = {
 	sign,
 	sgn: sign, // alias to match pico-8
 	// Math extra (not in the js Math object)
+	/* eslint-disable no-bitwise */
 	band(a, b) { return a & b; },
 	bnot(num) { return ~num; },
 	bor(a, b) { return a | b; },
 	bxor(a, b) { return a ^ b; },
 	shl(num, bits) { return num << bits; },
 	shr(num, bits) { return num >> bits; },
+	/* eslint-enable no-bitwise */
 	mid(a, b, c) {
-		[a, b, c] = [a, b, c].sort((x, y) => x - y);
-		return b;
+		return (
+			[a, b, c].sort((x, y) => x - y) // returns [min, mid, max]
+		)[1];
 	},
 	rnd(n) { return rand(n, 0); },
 	srand() {
 		// TODO - seeded random
 	},
-	
 
 	// ---------- Constants
 	COLORS,
@@ -403,7 +398,7 @@ const API = {
 	},
 	aabb([x1, y1, w1, h1], [x2, y2, w2, h2]) {
 		return (x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2);
-	}
+	},
 };
 
 const core = {
@@ -419,7 +414,7 @@ const core = {
 	drawId: null,
 	updateId: null,
 	loadedCart: null,
-	runningProgram:  null,
+	runningProgram: null,
 	updateTime: 1000 / 60, // Every 16.67 ms = 60 updates per second
 	defaultLaunchCartName: null,
 	installedCarts: {},
@@ -469,10 +464,10 @@ const core = {
 	},
 	/** Will mutate the the running program to fill in the backgrounds array */
 	async loadProgramBackgrounds(runningProgram, cart) {
-		const bgs = cart.backgrounds || cart.bgs || cart.bg;
-		if (!bgs) return;
+		const cartBgs = cart.backgrounds || cart.bgs || cart.bg;
+		if (!cartBgs) return [];
 		const { backgrounds } = runningProgram;
-		const sheetImages = await loadCartImages(bgs);
+		const sheetImages = await loadCartImages(cartBgs);
 		sheetImages.forEach((img) => backgrounds.push(img));
 		return backgrounds;
 	},
@@ -501,7 +496,7 @@ const core = {
 
 		const scriptHeader = 'const $ = this; console.log(api);';
 		const scope = (options.scope) ? { ...options.scope } : {};
-		const p = this.runningProgram = {
+		this.runningProgram = {
 			scope,
 			sprites: [],
 			backgrounds: [],
@@ -533,6 +528,7 @@ const core = {
 				nextUpdateCore();
 			},
 		};
+		const p = this.runningProgram;
 		await this.loadProgramSprites(p, cart);
 		await this.loadProgramBackgrounds(p, cart);
 		await this.loadProgramSounds(p, cart);
@@ -590,7 +586,8 @@ const core = {
 		if (buttonId === undefined) return;
 		if (!this.buttonDown[buttonId]) this.buttonDown[buttonId] = DOWN_FIRST;
 		else if (this.buttonDown[buttonId] >= 2) this.buttonDown[buttonId] += 1;
-		// Note that if the value is 1 then we do nothing to the value (this is only incremented by the update function)
+		// Note that if the value is 1 then we do nothing to the value (this is only incremented
+		// by the update function)
 		if (this.domButtons[buttonId]) {
 			this.domButtons[buttonId].forEach((elt) => elt.classList.add('cc-button--active'));
 		}
@@ -603,7 +600,7 @@ const core = {
 		}
 	},
 	setupKeyboard() {
-		const fkey = (e) => (e.key.length === 1) ? e.key.toLowerCase() : e.key;
+		const fkey = (e) => ((e.key.length === 1) ? e.key.toLowerCase() : e.key);
 		window.onkeydown = (e) => {
 			// treat all single keys as lowercase
 			const key = fkey(e);
@@ -693,7 +690,7 @@ const owls = {
 			await fn();
 			await core.loadProgram(splash, { includeLaunch: true });
 		});
-	}
+	},
 };
 
 // Debugging

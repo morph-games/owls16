@@ -1,10 +1,11 @@
 {
   "devDependencies": {
+    "rocket-boots-eslint": "github:rocket-boots/rocket-boots-eslint",
     "vite": "^5.2.11"
   },
   "name": "owls16",
   "description": "Open Web LS16 Fantasy Console",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "./src/console.js",
   "type": "module",
   "dependencies": {

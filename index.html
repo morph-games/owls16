@@ -15,7 +15,7 @@
 </head>
 <body scroll="no">
 	<main class="view-console">
-		<article class="console">
+		<article class="console" id="system-container">
 			<div class="console-monitor console-monitor--on">
 				<div class="console-monitor-mat">
 					<canvas class="console-monitor-canvas" width="256" height="224"></canvas>
@@ -84,8 +84,19 @@
 			</div>
 		</article>
 		<article class="library">
-
+			
 		</article>
+		<article class="editor">
+			<div>
+				<form id="cart-editor-form"></form>
+			</div>
+			<div>
+				JSON Output:
+				<textarea id="cart-editor-output" spellcheck="false"></textarea>
+				<a href="#" id="download-cart">Download Cartridge JSON File</a>
+			</div>
+		</article>
+
 	</main>
 </body>
 </html>

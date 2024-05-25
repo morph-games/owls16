@@ -35,9 +35,11 @@ main {
 	--console-black: #111;
 	--console-black-active: #333;
 }
+main.view-console .editor,
 main.view-console .library {
 	width: 0;
 	opacity: 0;
+	overflow: hidden;
 }
 main.view-console .console {
 	flex-grow: 1;
